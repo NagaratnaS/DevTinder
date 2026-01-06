@@ -21,7 +21,8 @@ app.get("/getUser", async (req, res) => {
 app.get("/getOneUser", async (req, res) => {
   try {
     const user = await User.findOne({ emailId: req.body.emailId });
-    res.send(user);
+    if (!user) res.status(400).send(`Error Fetching Data${error.message}`);
+    else res.send(user);
   } catch (error) {
     res.status(400).send(`Error Fetching Data${error.message}`);
   }
