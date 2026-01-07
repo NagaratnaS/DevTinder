@@ -5,6 +5,17 @@ const User = require("./models/user");
 
 app.use(express.json());
 
+app.get("/findOneUSer", async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const user = await User.findById(userId);
+    if (!user) res.status(400).send(`Error Fetching Data${error.message}`);
+    else res.send(user);
+  } catch (error) {
+    res.status(400).send(`Error Fetching Data${error.message}`);
+  }
+});
+
 app.get("/getUser", async (req, res) => {
   try {
     const users = await User.find({ emailId: req.body.emailId });
@@ -28,6 +39,20 @@ app.get("/getOneUser", async (req, res) => {
   }
 });
 
+app.delete("/deleteUser", async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const deletedUser = await User.findByIdAndDelete(userId);
+    if (!deletedUser) {
+      res.status(404).send("User not found");
+    } else {
+      res.send("User deleted successfully");
+    }
+  } catch (error) {
+    res.status(400).send(`Error Deleting Data${error.message}`);
+  }
+});
+
 app.get("/findAllUsers", async (req, res) => {
   try {
     const users = await User.find({});
@@ -38,12 +63,23 @@ app.get("/findAllUsers", async (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  const user = new User(req.body);
   try {
+    const user = new User(req.body);
     await user.save(user);
     res.send("User signed up successfully");
   } catch (error) {
     res.status(500).send("Error signing up user:" + error.message);
+  }
+});
+
+app.patch("/updateuser", async (req, res) => {
+  try {
+    const userId = req.body.userId;
+    const updateData = req.body;
+    await User.findByIdAndUpdate(userId, updateData);
+    res.send("User updated successfully");
+  } catch (error) {
+    res.status(500).send("Error updating user:" + error.message);
   }
 });
 
