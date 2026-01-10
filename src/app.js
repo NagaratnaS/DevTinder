@@ -2,8 +2,23 @@ const express = require("express");
 const connectDB = require("./config/database");
 const app = express();
 const User = require("./models/user");
+const validateSignUpData = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, passWord } = req.body;
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) throw new Error("Invalid Credentials");
+    const isPassWordMatch = await bcrypt.compare(passWord, user.passWord);
+    if (!isPassWordMatch) throw new Error("Invalid Credentials");
+    else res.send("User logged in successfully");
+  } catch (error) {
+    res.status(400).send(`Error loggin in!!${error.message}`);
+  }
+});
 
 app.get("/findOneUSer", async (req, res) => {
   try {
@@ -64,7 +79,15 @@ app.get("/findAllUsers", async (req, res) => {
 
 app.post("/signup", async (req, res) => {
   try {
-    const user = new User(req.body);
+    validateSignUpData(req);
+    const { firstName, lastName, emailId, passWord } = req.body;
+    const hashedPassword = await bcrypt.hash(passWord, 10);
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      passWord: hashedPassword,
+    });
     await user.save(user);
     res.send("User signed up successfully");
   } catch (error) {
@@ -72,11 +95,32 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-app.patch("/updateuser", async (req, res) => {
+app.patch("/updateuser/:userId", async (req, res) => {
   try {
-    const userId = req.body.userId;
-    const updateData = req.body;
-    await User.findByIdAndUpdate(userId, updateData);
+    const userId = req?.params?.userId;
+    const updateData = req?.body;
+    const ALLOWED_UPDATES = [
+      "firstName",
+      "lastname",
+      "passWord",
+      "age",
+      "gender",
+      "photoUrl",
+      "about",
+      "skills",
+    ];
+    const isUpdateAllowed = Object.keys(updateData).every((k) =>
+      ALLOWED_UPDATES.includes(k)
+    );
+    if (!isUpdateAllowed) throw new Error("Update not allowed!");
+
+    if (updateData.skills.length > 10)
+      throw new Error("Skills cannot be more than 10");
+
+    await User.findByIdAndUpdate(userId, updateData, {
+      runValidators: true,
+      // returnDocument: "after"/"before"
+    });
     res.send("User updated successfully");
   } catch (error) {
     res.status(500).send("Error updating user:" + error.message);
