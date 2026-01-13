@@ -6,6 +6,7 @@ const validateSignUpData = require("./utils/validation");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json());
 app.use(cookieParser());
@@ -27,16 +28,9 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.get("/profile", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const cookies = req.cookies;
-    const { token } = cookies;
-    if (!token) throw new Error("No token found");
-    //validate token
-    const decodedMessage = await jwt.verify(token, "DEV@Tinder$790");
-    const { _id } = decodedMessage;
-    const user = await User.findById(_id);
-    if (!user) throw new Error("User not found");
+    const user = req.user;
     res.send(user);
   } catch (error) {
     res.status(400).send(`Error Fetching Data${error.message}`);
@@ -54,7 +48,7 @@ app.get("/findOneUSer", async (req, res) => {
   }
 });
 
-app.get("/getUser", async (req, res) => {
+app.get("/getUser", userAuth, async (req, res) => {
   try {
     const users = await User.find({ emailId: req.body.emailId });
     if (users.length === 0) {
