@@ -4,7 +4,6 @@ const app = express();
 const User = require("./models/user");
 const validateSignUpData = require("./utils/validation");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const { userAuth } = require("./middlewares/auth");
 
@@ -16,11 +15,13 @@ app.post("/login", async (req, res) => {
     const { emailId, passWord } = req.body;
     const user = await User.findOne({ emailId: emailId });
     if (!user) throw new Error("Invalid Credentials");
-    const isPassWordMatch = await bcrypt.compare(passWord, user.passWord);
+    const isPassWordMatch = await user.isPasswordValid(passWord);
     if (!isPassWordMatch) throw new Error("Invalid Credentials");
     else {
-      const token = await jwt.sign({ _id: user._id }, "DEV@Tinder$790");
-      res.cookie("token", token);
+      const token = await user.getJWT();
+      res.cookie("token", token, {
+        expiresIn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
       res.send("User logged in successfully");
     }
   } catch (error) {
