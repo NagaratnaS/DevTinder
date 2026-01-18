@@ -9,6 +9,20 @@ const validateSignUpData = (req) => {
     throw new Error("Password is not strong enough");
 };
 
-const validateEditProfileData = (req) => {};
+const validateEditProfileData = (req) => {
+  const allowedEditFields = [
+    "firstName",
+    "lastName",
+    "age",
+    "gender",
+    "about",
+    "photoUrl",
+    "skills",
+  ];
+  const isEditAllowed = Object.keys(req.body).every((ele) =>
+    allowedEditFields.includes(ele)
+  );
+  return isEditAllowed;
+};
 
-module.exports = { validateSignUpData };
+module.exports = { validateSignUpData, validateEditProfileData };
