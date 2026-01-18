@@ -12,6 +12,10 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/requests");
 
+app.use("/auth", authRouter);
+app.use("/user", profileRouter);
+app.use("/requests", requestRouter);
+
 // app.get("/findOneUSer", async (req, res) => {
 //   try {
 //     const userId = req.body.userId;

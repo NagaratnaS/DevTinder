@@ -9,4 +9,6 @@ const validateSignUpData = (req) => {
     throw new Error("Password is not strong enough");
 };
 
+const validateEditProfileData = (req) => {};
+
 module.exports = { validateSignUpData };
