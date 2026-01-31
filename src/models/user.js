@@ -4,7 +4,13 @@ const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema(
   {
-    firstName: { type: String, required: true, minLength: 2, maxLength: 30 },
+    firstName: {
+      type: String,
+      required: true,
+      minLength: 2,
+      maxLength: 30,
+      unique: true,
+    },
     lastName: { type: String, minLength: 1, maxLength: 30 },
     emailId: {
       type: String,
@@ -49,8 +55,10 @@ const userSchema = new mongoose.Schema(
     about: { type: String, default: "No details added yet" },
     skills: { type: [String] },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
+
+userSchema.index({ firstName: 1, lastName: 1 });
 
 userSchema.methods.getJWT = async function () {
   const user = this;
@@ -65,7 +73,7 @@ userSchema.methods.isPasswordValid = async function (passWordInputByUser) {
   const passWordHash = user.passWord;
   const isPassWordMatch = await bcrypt.compare(
     passWordInputByUser,
-    passWordHash
+    passWordHash,
   );
   return isPassWordMatch;
 };
