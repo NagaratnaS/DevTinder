@@ -4,7 +4,7 @@ const User = require("../models/user");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 
-requestRouter.get(
+requestRouter.post(
   "/request/send/:status/:toUserId",
   userAuth,
   async (req, res) => {
@@ -51,6 +51,43 @@ requestRouter.get(
           status === "Interested"
             ? "Connection request sent successfully"
             : "Connection request ignored",
+        data,
+      });
+    } catch (err) {
+      res.status(400).send("Error:" + err.message);
+    }
+  },
+);
+
+requestRouter.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const { requestId, status } = req.params;
+
+      const allowedStatus = ["Accepted", "Rejected"];
+      if (!allowedStatus.includes(status)) {
+        res.status(400).json({
+          message: "Invalid status type:" + status,
+        });
+      }
+
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: loggedInUser._id,
+        status: "Interested",
+      });
+      if (!connectionRequest) {
+        return res.status(404).json({
+          message: "No Pending connection request found",
+        });
+      }
+      connectionRequest.status = status;
+      const data = await connectionRequest.save();
+      res.json({
+        message: "Connection request " + status,
         data,
       });
     } catch (err) {
